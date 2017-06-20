@@ -9,17 +9,11 @@ import java.io.IOException;
  */
 public class JMerge {
     public static void main(String[] params){
-//        params = new String[4];
-//        params[0] = "-clean";
-//        params[1] = "C:\\BS12CODE\\maps\\torch\\torch-1.dmm.backup";
-//        params[2] = "C:\\BS12CODE\\maps\\torch\\torch-1.dmm";
-//        params[3] = "C:\\BS12CODE\\maps\\torch\\torch-1.dmm";
-
         if(params.length == 0){
             System.exit(about());
         }
 
-        System.out.println("JMerge 1.0 Experimental");
+        System.out.println("JMerge 1.1");
         System.out.println("Running with parameters:");
         for(int i = 0; i < params.length; i++){
             System.out.println(params[i]);
@@ -36,7 +30,7 @@ public class JMerge {
     }
 
     private static int about(){
-        System.out.println("JMerge v1.0");
+        System.out.println("JMerge v1.1");
         System.out.println("The following operators may be used:");
         System.out.println("-merge : Attemts to merge two maps which originate from the same map, but have different changes.");
         System.out.println("-clean : Cleans a map after changes have been made, usually greatly reducing diff size.");
@@ -75,8 +69,8 @@ public class JMerge {
         resultMap.setMaxX(originMap.getMaxX());
         resultMap.setMaxY(originMap.getMaxY());
         resultMap.setKeyLength(originMap.getKeyLength());
-        for(int i = 0; i <= originMap.getMaxY(); i++) {
-            for(int j = 0; j <= originMap.getMaxX(); j++) {
+        for(int i = 0; i <= originMap.getMaxY()-1; i++) {
+            for(int j = 0; j <= originMap.getMaxX()-1; j++) {
                 Location location = new Location(j, i, 0);
                 String locOrigin = originMap.getTilesByLocation().get(location);
                 String locLocal = localMap.getTilesByLocation().get(location);
@@ -86,27 +80,43 @@ public class JMerge {
                 boolean originMatchesRemote = (locOrigin == null) ? (locRemote == null) : locOrigin.equals(locRemote);
                 boolean remoteMatchesLocal = (locRemote == null) ? (locLocal == null) : locOrigin.equals(locLocal);
 
+                String key, contents;
                 if(!originMatchesLocal && !originMatchesRemote && !remoteMatchesLocal) {
                     conflictEncountered = true;
                     System.out.println("CONFLICT: [" + j + ", " + i + ", 0]");
                     conflictResolveMode = getResolveMode(conflictResolveMode);
                     switch(conflictResolveMode){
                         case 1:
-                            resultMap.getTilesByLocation().put(location, localMap.getTilesByLocation().get(location));
+                            contents = locLocal;
+                            key = localMap.getTilesByContent().get(contents);
+                            break;
                         case 2:
-                            resultMap.getTilesByLocation().put(location, remoteMap.getTilesByLocation().get(location));
+                            contents = locRemote;
+                            key = remoteMap.getTilesByContent().get(contents);
+                            break;
                         case 3:
-                            resultMap.getTilesByLocation().put(location, originMap.getTilesByLocation().get(location));
+                            contents = locOrigin;
+                            key = originMap.getTilesByContent().get(contents);
+                            break;
+                        default:
+                            throw new RuntimeException("Incorrect conflict resolution mode! Aborting operation.");
                     }
                 } else if (!originMatchesLocal) {
-                    resultMap.getTilesByLocation().put(location, localMap.getTilesByLocation().get(location));
+                    contents = locLocal;
+                    key = localMap.getTilesByContent().get(contents);
                 } else if (!originMatchesRemote) {
-                    resultMap.getTilesByLocation().put(location, remoteMap.getTilesByLocation().get(location));
+                    contents = locRemote;
+                    key = remoteMap.getTilesByContent().get(contents);
                 } else {
-                    resultMap.getTilesByLocation().put(location, originMap.getTilesByLocation().get(location));
+                    contents = locOrigin;
+                    key = originMap.getTilesByContent().get(contents);
                 }
+                resultMap.getTilesByLocation().put(location, contents);
+                resultMap.getTilesByKey().put(key, contents);
+                resultMap.getTilesByContent().put(contents, key);
             }
         }
+        resultMap.cleanupMap(originMap);
         File file = new File(params[4]);
         if(conflictEncountered){
             System.out.println("WARN: Merge conlicts encountered. See above logs for more information. Map may require manual verification.");

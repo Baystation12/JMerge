@@ -39,6 +39,9 @@ public class NewMap implements Serializable {
 
     public void loadFromFile(File mapFile){
         try{
+            if(!mapFile.exists()){
+                return;
+            }
             BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(mapFile)));
             loadKeys(reader);
             loadMap(reader);
