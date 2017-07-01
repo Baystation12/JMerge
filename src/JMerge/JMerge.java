@@ -9,11 +9,18 @@ import java.io.IOException;
  */
 public class JMerge {
     public static void main(String[] params){
+        // FOR USE ONLY DURING DEBUGGING - replace with your map file paths.
+//        params = new String[4];
+//        params[0] = "-clean";
+//        params[1] = "C:/BS12CODE/maps/exodus/exodus-2.dmm.backup";
+//        params[2] = "C:/BS12CODE/maps/exodus/exodus-2.dmm";
+//        params[3] = "C:/BS12CODE/maps/exodus/exodus-2.dmm.fixed";
+
         if(params.length == 0){
             System.exit(about());
         }
 
-        System.out.println("JMerge 1.1");
+        System.out.println("JMerge 1.2");
         System.out.println("Running with parameters:");
         for(int i = 0; i < params.length; i++){
             System.out.println(params[i]);
@@ -30,7 +37,7 @@ public class JMerge {
     }
 
     private static int about(){
-        System.out.println("JMerge v1.1");
+        System.out.println("JMerge v1.2");
         System.out.println("The following operators may be used:");
         System.out.println("-merge : Attemts to merge two maps which originate from the same map, but have different changes.");
         System.out.println("-clean : Cleans a map after changes have been made, usually greatly reducing diff size.");
@@ -42,7 +49,7 @@ public class JMerge {
         NewMap newMap = new NewMap(new File(params[2]));
         newMap.cleanupMap(originMap);
         try {
-            MapSaver.saveMapToFile(new File(params[2]), newMap);
+            MapSaver.saveMapToFile(new File(params[3]), newMap);
         } catch (IOException e) {
             e.printStackTrace();
             return 1;

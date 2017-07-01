@@ -111,26 +111,26 @@ public class NewMap implements Serializable {
         }
 
         Map<String, String> newTilesByKey = new TreeMap<>(new KeyComparator());
-        Map<String, String> newTilesByContent = new TreeMap<>(new KeyComparator());
+        Map<String, String> newTilesByContent = new HashMap<>();
 
-        // Keys are allocated with following priority:
-        // 1. Original map's keys
-        // 2. New map's keys, assuming they aren't already used by original map
-        // 3. Generated keys for remaining tiles.
-        for(String location : getTilesByLocation().values()){
-            String originalKey = otherMap.getTilesByContent().get(location);
-            String currentKey = tilesByContent.get(location);
-            if(otherMap.getTilesByContent().containsKey(location)){
-                newTilesByKey.put(originalKey, location);
-                newTilesByContent.put(location, originalKey);
-            } else {
-                if(!otherMap.getTilesByKey().containsKey(currentKey)){
-                    newTilesByKey.put(currentKey, location);
-                    newTilesByContent.put(location, currentKey);
-                } else {
+        // First pass - try to reuse keys from original map. This is what minimizes the diff size.
+        for (int i = 0; i < maxY; i++) {
+            for (int j = 0; j < maxX; j++) {
+                String contents = tilesByLocation.get(new Location(j, i, 0));
+                if((newTilesByContent.get(contents) == null) && (otherMap.getTilesByContent().get(contents) != null)){
+                    newTilesByContent.put(contents, otherMap.getTilesByContent().get(contents));
+                    newTilesByKey.put(otherMap.getTilesByContent().get(contents), contents);
+                }
+            }
+        }
+        // Second pass - fill the remaining tiles with generated keys.
+        for (int i = 0; i < maxY; i++) {
+            for (int j = 0; j < maxX; j++) {
+                String contents = tilesByLocation.get(new Location(j, i, 0));
+                if(newTilesByContent.get(contents) == null){
                     String generatedKey = generateNewKey();
-                    newTilesByKey.put(generatedKey, location);
-                    newTilesByContent.put(location, generatedKey);
+                    newTilesByContent.put(contents, generatedKey);
+                    newTilesByKey.put(generatedKey, contents);
                 }
             }
         }
@@ -163,7 +163,7 @@ public class NewMap implements Serializable {
 
     public void setKeyLength(int keyLength) {
         this.keyLength = keyLength;
-        keyGeneratorCurrentId = validKeyElements.length ^ keyLength;
+        keyGeneratorCurrentId = (int) Math.pow(validKeyElements.length, keyLength - 1);
     }
 
 

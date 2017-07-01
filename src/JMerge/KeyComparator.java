@@ -11,7 +11,15 @@ import java.util.Comparator;
  */
 public class KeyComparator implements Comparator<String> {
     public int compare(String key1, String key2) {
-        for(int i = 0 ; i < (key1.length()) ; i++) {
+        if(key1.equals(key2)){
+            return 0;
+        }
+        if(key1.length() > key2.length()){
+            return 1;
+        } else if (key2.length() < key1.length()){
+            return -1;
+        }
+        for(int i = 0 ; i < (Math.min(key1.length(), key2.length())) ; i++) {
             Character c1 = key1.charAt(i);
             Character c2 = key2.charAt(i);
 
