@@ -12,15 +12,15 @@ public class JMerge {
         // FOR USE ONLY DURING DEBUGGING - replace with your map file paths.
 //        params = new String[4];
 //        params[0] = "-clean";
-//        params[1] = "C:/BS12CODE/maps/exodus/exodus-2.dmm.backup";
-//        params[2] = "C:/BS12CODE/maps/exodus/exodus-2.dmm";
-//        params[3] = "C:/BS12CODE/maps/exodus/exodus-2.dmm.fixed";
+//        params[1] = "C:/temporary/torch-2.dmm.backup";
+//        params[2] = "C:/temporary/torch-2.dmm";
+//        params[3] = "C:/temporary/torch-2-cleaned.dmm";
 
         if(params.length == 0){
             System.exit(about());
         }
 
-        System.out.println("JMerge 1.2");
+        System.out.println("JMerge 1.4");
         System.out.println("Running with parameters:");
         for(int i = 0; i < params.length; i++){
             System.out.println(params[i]);
@@ -37,7 +37,7 @@ public class JMerge {
     }
 
     private static int about(){
-        System.out.println("JMerge v1.2");
+        System.out.println("JMerge v1.4");
         System.out.println("The following operators may be used:");
         System.out.println("-merge : Attemts to merge two maps which originate from the same map, but have different changes.");
         System.out.println("-clean : Cleans a map after changes have been made, usually greatly reducing diff size.");
@@ -54,7 +54,8 @@ public class JMerge {
             e.printStackTrace();
             return 1;
         }
-        return 1; // TODO
+        System.out.println("Successfully cleaned map. Exiting.");
+        return 0;
     }
 
     private static int merge(String[] params){
@@ -125,16 +126,18 @@ public class JMerge {
         }
         resultMap.cleanupMap(originMap);
         File file = new File(params[4]);
-        if(conflictEncountered){
-            System.out.println("WARN: Merge conlicts encountered. See above logs for more information. Map may require manual verification.");
-        }
         try {
             MapSaver.saveMapToFile(file, resultMap);
         } catch (IOException e) {
             e.printStackTrace();
             return 1;
         }
-        return conflictEncountered ? 1 : 0;
+        if(conflictEncountered){
+            System.out.println("WARN: Merge conlicts encountered. See above logs for more information. Map may require manual verification.");
+            return 1;
+        }
+        System.out.println("Successfully merged maps. Exiting.");
+        return 0;
     }
 
     // 1: Local, 2:Remote, 3:Origin
@@ -144,6 +147,10 @@ public class JMerge {
         }
         while(true){
             System.out.println("A conflict has been detected. Please specify which version should be used (local/remote/origin/abort):");
+            String input = System.console().readLine();
+            if((input == null) || input.isEmpty()) {
+                continue;
+            }
             switch(System.console().readLine()){
                 case "local":
                     return 1;

@@ -123,19 +123,21 @@ public class NewMap implements Serializable {
                 }
             }
         }
+        tilesByKey = newTilesByKey;
+        tilesByContent = newTilesByContent;
+        setKeyLength(keyLength); // Reset the key generator's indexes.
+
         // Second pass - fill the remaining tiles with generated keys.
         for (int i = 0; i < maxY; i++) {
             for (int j = 0; j < maxX; j++) {
                 String contents = tilesByLocation.get(new Location(j, i, 0));
-                if(newTilesByContent.get(contents) == null){
+                if(tilesByContent.get(contents) == null){
                     String generatedKey = generateNewKey();
-                    newTilesByContent.put(contents, generatedKey);
-                    newTilesByKey.put(generatedKey, contents);
+                    tilesByContent.put(contents, generatedKey);
+                    tilesByKey.put(generatedKey, contents);
                 }
             }
         }
-        tilesByKey = newTilesByKey;
-        tilesByContent = newTilesByContent;
     }
 
     // Attempts to generate a new, unused key. Relatively CPU intensive and therefore used only as last-resort method.
@@ -145,7 +147,7 @@ public class NewMap implements Serializable {
             String generatedKey = "";
             while (localId >= validKeyElements.length) {
                 int i = localId % validKeyElements.length;
-                generatedKey = generatedKey + validKeyElements[i];
+                generatedKey = validKeyElements[i] + generatedKey;
                 localId -= i;
                 localId /= validKeyElements.length;
             }
