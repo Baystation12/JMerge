@@ -1,5 +1,6 @@
 package JMerge;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -10,14 +11,13 @@ import java.io.IOException;
  */
 public class MapSaver {
     public static void saveMapToFile(File file, NewMap map) throws IOException {
-        try {
-            FileWriter writer = new FileWriter(file);
-
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
             // Write key block
             for (String key : map.getTilesByKey().keySet()) {
                 writer.write("\"" + key + "\" = " + map.getTilesByKey().get(key) + "\r\n");
             }
             writer.write("\r\n");
+
             // And then the map.
             writer.write("(1,1,1) = {\"\r\n");
             for (int i = 0; i < map.getMaxY(); i++) {
@@ -28,7 +28,6 @@ public class MapSaver {
                 writer.write("\r\n");
             }
             writer.write("\"}");
-            writer.close();
         } catch (Exception ex){
             ex.printStackTrace();
         }
