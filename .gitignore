@@ -24,3 +24,6 @@ hs_err_pid*
 out/
 BS12_MAPMERGE.iml
 *.iml
+
+
+/target

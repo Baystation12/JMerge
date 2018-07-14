@@ -2,9 +2,7 @@ package JMerge;
 
 import javax.naming.OperationNotSupportedException;
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Created by Admin
@@ -60,7 +58,7 @@ public class NewMap implements Serializable {
                         setKeyLength(loadedRow.indexOf("\"", 1) - 1);
                     }
                     String key = loadedRow.substring(1, 1 + keyLength);
-                    String value = loadedRow.substring(loadedRow.indexOf("("));
+                    String value = cleanTags(loadedRow.substring(loadedRow.indexOf("(")));
                     tilesByKey.put(key, value);
                     tilesByContent.put(value, key);
                 } else {
@@ -112,14 +110,19 @@ public class NewMap implements Serializable {
 
         Map<String, String> newTilesByKey = new TreeMap<>(new KeyComparator());
         Map<String, String> newTilesByContent = new HashMap<>();
+        Set<String> unusedKeys = otherMap.getTilesByKey().keySet();
 
         // First pass - try to reuse keys from original map. This is what minimizes the diff size.
         for (int i = 0; i < maxY; i++) {
             for (int j = 0; j < maxX; j++) {
                 String contents = tilesByLocation.get(new Location(j, i, 0));
-                if((newTilesByContent.get(contents) == null) && (otherMap.getTilesByContent().get(contents) != null)){
-                    newTilesByContent.put(contents, otherMap.getTilesByContent().get(contents));
-                    newTilesByKey.put(otherMap.getTilesByContent().get(contents), contents);
+                String key = otherMap.getTilesByContent().get(contents);
+
+                if(newTilesByContent.get(contents) == null && key != null){
+                    unusedKeys.remove(key);
+
+                    newTilesByContent.put(contents, key);
+                    newTilesByKey.put(key, contents);
                 }
             }
         }
@@ -132,9 +135,18 @@ public class NewMap implements Serializable {
             for (int j = 0; j < maxX; j++) {
                 String contents = tilesByLocation.get(new Location(j, i, 0));
                 if(tilesByContent.get(contents) == null){
-                    String generatedKey = generateNewKey();
-                    tilesByContent.put(contents, generatedKey);
-                    tilesByKey.put(generatedKey, contents);
+                    String key;
+
+                    if (unusedKeys.isEmpty()) {
+                        key = generateNewKey();
+                    } else {
+                        Iterator<String> it = unusedKeys.iterator();
+                        key = it.next();
+                        it.remove();
+                    }
+
+                    tilesByContent.put(contents, key);
+                    tilesByKey.put(key, contents);
                 }
             }
         }
@@ -166,6 +178,15 @@ public class NewMap implements Serializable {
     public void setKeyLength(int keyLength) {
         this.keyLength = keyLength;
         keyGeneratorCurrentId = (int) Math.pow(validKeyElements.length, keyLength - 1);
+    }
+
+    // Removes tags from the row's contents.
+    private String cleanTags(String row){
+        row = row.replaceAll("\\{tag = \"(.*?)\";", "{");
+        row = row.replaceAll("; tag = \"(.*?)\"\\}", "}");
+        row = row.replaceAll("\\{tag = \"(.*?)\"\\}", "");
+        row = row.replaceAll("; tag = \"(.*?)\"\\;", ";");
+        return row;
     }
 
 
