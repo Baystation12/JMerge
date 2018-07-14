@@ -58,7 +58,7 @@ public class NewMap implements Serializable {
                         setKeyLength(loadedRow.indexOf("\"", 1) - 1);
                     }
                     String key = loadedRow.substring(1, 1 + keyLength);
-                    String value = loadedRow.substring(loadedRow.indexOf("("));
+                    String value = cleanTags(loadedRow.substring(loadedRow.indexOf("(")));
                     tilesByKey.put(key, value);
                     tilesByContent.put(value, key);
                 } else {
@@ -178,6 +178,15 @@ public class NewMap implements Serializable {
     public void setKeyLength(int keyLength) {
         this.keyLength = keyLength;
         keyGeneratorCurrentId = (int) Math.pow(validKeyElements.length, keyLength - 1);
+    }
+
+    // Removes tags from the row's contents.
+    private String cleanTags(String row){
+        row = row.replaceAll("\\{tag = \"(.*?)\";", "{");
+        row = row.replaceAll("; tag = \"(.*?)\"\\}", "}");
+        row = row.replaceAll("\\{tag = \"(.*?)\"\\}", "");
+        row = row.replaceAll("; tag = \"(.*?)\"\\;", ";");
+        return row;
     }
 
 
